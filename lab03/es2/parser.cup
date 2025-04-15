@@ -1,0 +1,45 @@
+import java_cup.runtime.*;
+
+// CODICE PER INVALID
+parser code {:
+    public void report_error(String message, Object info) {
+        if (info instanceof Symbol) {
+            Symbol symbol = (Symbol) info;
+            if (symbol.sym == sym.INVALID) {
+                System.err.println("Errore: trovato token INVALID nel file di input.");
+                System.exit(1);
+            }
+        }
+        System.err.println("Errore di parsing: " + message);
+    }
+:};
+
+// TERMINAL SYMBOLS
+terminal SEP, WRITER, BOOK, CO, SC, USER, LOAN, INVALID;
+
+// NON-TERMINAL SYMBOLS
+non terminal program, writers, writer_entry, book_list, users, user_entry, loan_list;
+
+// PRECEDENCE RULES
+
+// GRAMMAR DEFINITION
+
+start with program;
+
+program ::= writers SEP users;
+
+writers ::= writer_entry
+            | writers writer_entry;
+writer_entry ::= WRITER book_list SC;
+
+
+book_list ::= BOOK
+            | BOOK CO book_list;
+
+users ::= user_entry
+        | users user_entry;
+user_entry ::= USER loan_list SC;
+
+loan_list ::= LOAN
+            | LOAN CO loan_list;
+

@@ -14,6 +14,7 @@ class Yylex implements java_cup.runtime.Scanner {
 
   /** Initial size of the lookahead buffer. */
   private static final int ZZ_BUFFERSIZE = 16384;
+  private static final String ZZ_NL = System.getProperty("line.separator");
 
   // Lexical states.
   public static final int YYINITIAL = 0;
@@ -62,9 +63,12 @@ class Yylex implements java_cup.runtime.Scanner {
   private static final int [] ZZ_CMAP_BLOCKS = zzUnpackcmap_blocks();
 
   private static final String ZZ_CMAP_BLOCKS_PACKED_0 =
-    "\12\0\1\1\2\2\1\3\22\0\1\4\7\0\1\5"+
-    "\1\6\1\0\1\7\1\0\1\10\2\0\1\11\11\12"+
-    "\3\0\1\13\107\0\1\2\u01a2\0\2\2\326\0\u0100\2";
+    "\11\0\1\1\1\2\2\3\1\2\22\0\1\4\1\0"+
+    "\1\5\2\0\1\6\6\0\1\7\1\10\1\0\1\11"+
+    "\12\12\1\13\1\14\2\0\1\15\2\0\1\16\1\17"+
+    "\4\20\2\21\1\22\2\21\1\23\2\21\1\24\3\21"+
+    "\1\25\2\21\1\26\4\21\6\0\6\20\24\21\12\0"+
+    "\1\3\u01a2\0\2\3\326\0\u0100\3";
 
   private static int [] zzUnpackcmap_blocks() {
     int [] result = new int[1024];
@@ -91,11 +95,12 @@ class Yylex implements java_cup.runtime.Scanner {
   private static final int [] ZZ_ACTION = zzUnpackAction();
 
   private static final String ZZ_ACTION_PACKED_0 =
-    "\1\0\1\1\2\2\1\3\1\4\1\5\1\6\1\7"+
-    "\1\10";
+    "\1\0\1\1\2\2\2\1\1\3\1\1\1\4\1\1"+
+    "\1\0\1\5\7\0\1\6\3\0\1\7\2\0\1\10"+
+    "\32\0\1\11\1\0\1\11\12\0\1\12\4\11";
 
   private static int [] zzUnpackAction() {
-    int [] result = new int[10];
+    int [] result = new int[71];
     int offset = 0;
     offset = zzUnpackAction(ZZ_ACTION_PACKED_0, offset, result);
     return result;
@@ -120,11 +125,18 @@ class Yylex implements java_cup.runtime.Scanner {
   private static final int [] ZZ_ROWMAP = zzUnpackRowMap();
 
   private static final String ZZ_ROWMAP_PACKED_0 =
-    "\0\0\0\14\0\14\0\30\0\14\0\14\0\14\0\14"+
-    "\0\44\0\14";
+    "\0\0\0\27\0\56\0\105\0\134\0\163\0\27\0\212"+
+    "\0\27\0\241\0\270\0\27\0\317\0\346\0\375\0\u0114"+
+    "\0\u012b\0\u0142\0\u0159\0\u0170\0\u0187\0\u019e\0\u01b5\0\u01cc"+
+    "\0\u01e3\0\u01fa\0\27\0\u0211\0\u0228\0\u023f\0\u0256\0\u026d"+
+    "\0\u0284\0\u029b\0\u02b2\0\u02c9\0\u02e0\0\u02f7\0\u030e\0\u0325"+
+    "\0\u033c\0\u0353\0\u036a\0\u0381\0\u0398\0\u03af\0\u03c6\0\u03dd"+
+    "\0\u03f4\0\u040b\0\u0422\0\u0439\0\u0450\0\u0467\0\u047e\0\u0495"+
+    "\0\u04ac\0\u04c3\0\u04da\0\u04f1\0\u0508\0\u051f\0\u0536\0\u054d"+
+    "\0\u0564\0\u057b\0\27\0\u0592\0\u05a9\0\27\0\u05c0";
 
   private static int [] zzUnpackRowMap() {
-    int [] result = new int[10];
+    int [] result = new int[71];
     int offset = 0;
     offset = zzUnpackRowMap(ZZ_ROWMAP_PACKED_0, offset, result);
     return result;
@@ -147,12 +159,37 @@ class Yylex implements java_cup.runtime.Scanner {
   private static final int [] ZZ_TRANS = zzUnpackTrans();
 
   private static final String ZZ_TRANS_PACKED_0 =
-    "\1\2\1\3\1\0\1\4\1\3\1\5\1\6\1\7"+
-    "\1\10\1\2\1\11\1\12\15\0\1\3\23\0\2\11"+
-    "\1\0";
+    "\1\2\1\3\1\4\1\0\1\3\1\5\1\6\1\7"+
+    "\2\2\1\10\1\2\1\11\6\2\1\12\3\2\30\0"+
+    "\1\3\2\0\1\3\24\0\1\4\24\0\5\13\1\0"+
+    "\21\13\6\0\1\14\32\0\1\15\36\0\1\16\4\0"+
+    "\5\13\1\17\21\13\10\0\1\20\1\21\21\0\1\22"+
+    "\23\0\1\17\2\0\1\17\3\0\1\23\2\0\1\24"+
+    "\25\0\1\25\26\0\1\26\33\0\1\27\24\0\1\30"+
+    "\12\0\1\24\2\0\1\24\34\0\1\31\26\0\1\32"+
+    "\40\0\1\33\3\0\1\30\2\0\1\30\32\0\1\34"+
+    "\27\0\1\35\27\0\1\36\3\0\3\36\20\0\1\37"+
+    "\26\0\1\40\3\0\3\40\20\0\1\41\26\0\1\42"+
+    "\3\0\3\42\20\0\1\43\26\0\1\44\3\0\3\44"+
+    "\20\0\1\45\26\0\1\46\3\0\3\46\7\0\1\47"+
+    "\2\0\1\47\32\0\1\50\17\0\1\47\2\0\1\47"+
+    "\5\0\1\51\26\0\1\52\3\0\11\52\12\0\1\53"+
+    "\27\0\1\54\23\0\1\55\23\0\1\56\33\0\1\57"+
+    "\14\0\5\60\1\0\21\60\12\0\1\61\14\0\5\60"+
+    "\1\62\21\60\10\0\1\63\31\0\1\64\25\0\1\65"+
+    "\3\0\3\65\20\0\1\66\26\0\1\67\3\0\3\67"+
+    "\20\0\1\66\1\70\7\0\1\71\15\0\1\72\3\0"+
+    "\3\72\31\0\1\71\25\0\1\73\2\0\1\73\13\0"+
+    "\1\74\3\0\3\74\7\0\1\75\2\0\1\75\34\0"+
+    "\1\76\3\0\3\76\7\0\1\75\2\0\1\75\11\0"+
+    "\1\77\1\100\5\0\1\100\11\0\1\101\44\0\1\102"+
+    "\24\0\1\102\14\0\1\103\3\0\11\103\1\0\1\104"+
+    "\2\0\1\104\23\0\1\104\2\0\1\104\5\0\1\105"+
+    "\3\0\11\106\1\0\1\107\2\0\1\107\5\0\1\105"+
+    "\3\0\11\106\1\0\1\107\2\0\1\107\11\0\11\106";
 
   private static int [] zzUnpackTrans() {
-    int [] result = new int[48];
+    int [] result = new int[1495];
     int offset = 0;
     offset = zzUnpackTrans(ZZ_TRANS_PACKED_0, offset, result);
     return result;
@@ -195,10 +232,12 @@ class Yylex implements java_cup.runtime.Scanner {
   private static final int [] ZZ_ATTRIBUTE = zzUnpackAttribute();
 
   private static final String ZZ_ATTRIBUTE_PACKED_0 =
-    "\1\0\2\11\1\1\4\11\1\1\1\11";
+    "\1\0\1\11\4\1\1\11\1\1\1\11\1\1\1\0"+
+    "\1\11\7\0\1\1\3\0\1\1\2\0\1\11\32\0"+
+    "\1\1\1\0\1\1\12\0\1\11\2\1\1\11\1\1";
 
   private static int [] zzUnpackAttribute() {
-    int [] result = new int[10];
+    int [] result = new int[71];
     int offset = 0;
     offset = zzUnpackAttribute(ZZ_ATTRIBUTE_PACKED_0, offset, result);
     return result;
@@ -283,9 +322,27 @@ class Yylex implements java_cup.runtime.Scanner {
    * @param   in  the java.io.Reader to read input from.
    */
   Yylex(java.io.Reader in) {
+      //
     this.zzReader = in;
   }
 
+
+  private static String zzToPrintable(String str) {
+    StringBuilder builder = new StringBuilder();
+    for (int n = 0 ; n < str.length() ; ) {
+      int ch = str.codePointAt(n);
+      int charCount = Character.charCount(ch);
+      n += charCount;
+      if (ch > 31 && ch < 127) {
+        builder.append((char)ch);
+      } else if (charCount == 1) {
+        builder.append(String.format("\\u%04X", ch));
+      } else {
+        builder.append(String.format("\\U%06X", ch));
+      }
+    }
+    return builder.toString();
+  }
   /**
    * Translates raw input code points to DFA table row
    */
@@ -528,6 +585,7 @@ class Yylex implements java_cup.runtime.Scanner {
     if (!zzEOFDone) {
       zzEOFDone = true;
     
+    //
   yyclose();    }
   }
 
@@ -626,47 +684,132 @@ class Yylex implements java_cup.runtime.Scanner {
       else {
         switch (zzAction < 0 ? zzAction : ZZ_ACTION[zzAction]) {
           case 1:
-            { System.out.println("Error:" + yytext());
-            }
-            // fall through
-          case 9: break;
-          case 2:
-            { ;
-            }
-            // fall through
-          case 10: break;
-          case 3:
-            { System.out.println("OPEN BRACKET");return new Symbol(sym.OBRACKET);
+            System.out.println("match: --"+zzToPrintable(yytext())+"--");
+            System.out.println("action [52] { System.err.println(\"Errore: carattere non riconosciuto -> \'\" + yytext() + \"\'\");"+ZZ_NL+"    throw new Error(\"Errore: carattere non riconosciuto -> \'\" + yytext() + \"\'\"); }");
+            { System.err.println("Errore: carattere non riconosciuto -> '" + yytext() + "'");
+    throw new Error("Errore: carattere non riconosciuto -> '" + yytext() + "'");
             }
             // fall through
           case 11: break;
-          case 4:
-            { System.out.println("CLOSE BRACKET");return new Symbol(sym.CBRACKET);
+          case 2:
+            System.out.println("match: --"+zzToPrintable(yytext())+"--");
+            System.out.println("action [50] { /* ignora */ }");
+            { /* ignora */
             }
             // fall through
           case 12: break;
-          case 5:
-            { System.out.println("PLUS");return new Symbol(sym.PLUS);
+          case 3:
+            System.out.println("match: --"+zzToPrintable(yytext())+"--");
+            System.out.println("action [47] { return new Symbol(sym.CO); }");
+            { return new Symbol(sym.CO);
             }
             // fall through
           case 13: break;
-          case 6:
-            { System.out.println("MINUS");return new Symbol(sym.MINUS);
+          case 4:
+            System.out.println("match: --"+zzToPrintable(yytext())+"--");
+            System.out.println("action [48] { return new Symbol(sym.SC); }");
+            { return new Symbol(sym.SC);
             }
             // fall through
           case 14: break;
-          case 7:
-            { System.out.println("NUMBER:"+yytext());return new Symbol(sym.NUMBER);
+          case 5:
+            System.out.println("match: --"+zzToPrintable(yytext())+"--");
+            System.out.println("action [42] { return new Symbol(sym.SEP); }");
+            { return new Symbol(sym.SEP);
             }
             // fall through
           case 15: break;
-          case 8:
-            { System.out.println("EQUAL");return new Symbol(sym.EQUAL);
+          case 6:
+            System.out.println("match: --"+zzToPrintable(yytext())+"--");
+            System.out.println("action [45] { return new Symbol(sym.USER); }");
+            { return new Symbol(sym.USER);
             }
             // fall through
           case 16: break;
+          case 7:
+            System.out.println("match: --"+zzToPrintable(yytext())+"--");
+            System.out.println("action [43] { return new Symbol(sym.WRITER); }");
+            { return new Symbol(sym.WRITER);
+            }
+            // fall through
+          case 17: break;
+          case 8:
+            System.out.println("match: --"+zzToPrintable(yytext())+"--");
+            System.out.println("action [49] { return new Symbol(sym.INVALID); }");
+            { return new Symbol(sym.INVALID);
+            }
+            // fall through
+          case 18: break;
+          case 9:
+            System.out.println("match: --"+zzToPrintable(yytext())+"--");
+            System.out.println("action [46] { return new Symbol(sym.BOOK); }");
+            { return new Symbol(sym.BOOK);
+            }
+            // fall through
+          case 19: break;
+          case 10:
+            System.out.println("match: --"+zzToPrintable(yytext())+"--");
+            System.out.println("action [44] { return new Symbol(sym.LOAN); }");
+            { return new Symbol(sym.LOAN);
+            }
+            // fall through
+          case 20: break;
           default:
             zzScanError(ZZ_NO_MATCH);
+        }
+      }
+    }
+  }
+
+  /**
+   * Runs the scanner on input files.
+   *
+   * This main method is the debugging routine for the scanner.
+   * It prints debugging information about each returned token to
+   * System.out until the end of file is reached, or an error occured.
+   *
+   * @param argv   the command line, contains the filenames to run
+   *               the scanner on.
+   */
+  public static void main(String[] argv) {
+    if (argv.length == 0) {
+      System.out.println("Usage : java Yylex [ --encoding <name> ] <inputfile(s)>");
+    }
+    else {
+      int firstFilePos = 0;
+      String encodingName = "UTF-8";
+      if (argv[0].equals("--encoding")) {
+        firstFilePos = 2;
+        encodingName = argv[1];
+        try {
+          // Side-effect: is encodingName valid?
+          java.nio.charset.Charset.forName(encodingName);
+        } catch (Exception e) {
+          System.out.println("Invalid encoding '" + encodingName + "'");
+          return;
+        }
+      }
+      for (int i = firstFilePos; i < argv.length; i++) {
+        Yylex scanner = null;
+        try {
+          java.io.FileInputStream stream = new java.io.FileInputStream(argv[i]);
+          java.io.Reader reader = new java.io.InputStreamReader(stream, encodingName);
+          scanner = new Yylex(reader);
+          do {
+            System.out.println(scanner.next_token());
+          } while (!scanner.zzAtEOF);
+
+        }
+        catch (java.io.FileNotFoundException e) {
+          System.out.println("File not found : \""+argv[i]+"\"");
+        }
+        catch (java.io.IOException e) {
+          System.out.println("IO error scanning file \""+argv[i]+"\"");
+          System.out.println(e);
+        }
+        catch (Exception e) {
+          System.out.println("Unexpected exception:");
+          e.printStackTrace();
         }
       }
     }
