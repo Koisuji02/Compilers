@@ -1,0 +1,213 @@
+import java_cup.runtime.*;
+import java.util.*;
+import java.io.*;
+
+init with {:
+    
+    map = new HashMap<String, ArrayList<Product>>();
+
+:};
+
+parser code {:
+
+    HashMap<String, ArrayList<Product>> map = new HashMap<String, ArrayList<Product>>();
+
+    class Product{
+        private Integer id;
+        private String name;
+        private Double cost;
+
+        // costruttore
+        Product(Integer id, String name, Double cost){
+            this.name = name;
+            this.id = id;
+            this.cost = cost;
+        }
+
+        String getName(){
+            return this.name;
+        }
+
+        Integer getId(){
+            return this.id;
+        }
+
+        Double getCost(){
+            return this.cost;
+        }
+    }
+
+    // ERROR FUNCTION
+    public void report_error(String message, Object info) {
+        System.err.print("ERROR: Syntax error");
+        if (info instanceof Symbol)
+            if (((Symbol)info).left != -1){
+                int line = (((Symbol)info).left)+1;
+                int column = (((Symbol)info).right)+1;
+                System.err.print(" (linea "+line+", colonna "+column+"): ");
+            } else System.err.print(": ");
+        else System.err.print(": ");
+    }
+
+    // ritorna il valore del simbolo alla posizione = pos (dello stack)
+    public Object stack(int pos) {
+        return (((Symbol)stack.elementAt(tos + pos)).value);
+    }
+
+    public ArrayList<String[]> getPrice(String name, Integer perc, ArrayList<String[]> list){
+        Double tot = 0.0;
+        Integer n_prod = 0;
+
+        ArrayList<Product> products = map.get(name);
+        ArrayList<String[]> result = new ArrayList<String[]>();
+
+        for (Product p: products){
+            String[] strings = new String[3];
+            for (String[] s: list) {
+                if (p.getName().equals(s[0])){
+                    Double tot_prod = p.getCost()*(Double.parseDouble(s[1]))*perc.doubleValue()/100.0;
+                    strings[1] = tot_prod.toString();
+                    strings[0] = p.getName();
+                    strings[2] = s[1];
+                }
+            }
+            result.add(strings);
+        }
+
+        return result;
+    }
+
+:};
+
+
+action code {:
+    //
+:};
+
+
+// TERMINALI
+terminal STAR, MINUS, SC, CM, PERC, SEP, TOK1, TOK2, TOK3;
+terminal String EURO, NAME;
+terminal Integer INT;
+terminal Double COST;
+
+
+// NON-TERMINALI
+
+non terminal prog, header, dresses, shopping;
+non terminal option1, option2, dress;
+non terminal tok1_odd_min3, tok2_valid, opt_second_tok2, tok13_sequence, tok13_element;
+
+non terminal Product prod;
+non terminal ArrayList<Product> prod_list;
+non terminal ArrayList<String[]> products;
+non terminal String[] product;
+non terminal purchase;
+
+
+// PRECEDENCES
+
+
+
+// GRAMMAR
+
+start with prog;
+
+prog ::= header SEP dresses SEP shopping
+;
+
+header ::= option1 |
+            option2
+;
+
+option1 ::= tok1_odd_min3 tok2_valid
+;
+
+// TOK1 in numero dispari >= 3 (3, 5, 7, ...)
+tok1_odd_min3 ::= TOK1 TOK1 TOK1 |
+                  tok1_odd_min3 TOK1 TOK1
+;
+
+// TOK2 esattamente 3, 9 o 10 volte
+tok2_valid ::= TOK2 TOK2 TOK2 |
+               TOK2 TOK2 TOK2 TOK2 TOK2 TOK2 TOK2 TOK2 TOK2 |
+               TOK2 TOK2 TOK2 TOK2 TOK2 TOK2 TOK2 TOK2 TOK2 TOK2
+;
+
+// Option2: inizia con TOK2, può avere un secondo TOK2 opzionale, seguito da sequenza di TOK1 e TOK3
+option2 ::= TOK2 opt_second_tok2 tok13_sequence
+;
+
+// Secondo TOK2 opzionale
+opt_second_tok2 ::= TOK2 | /*empty*/
+;
+
+// Sequenza di TOK1 e TOK3 (anche vuota)
+tok13_sequence ::= tok13_sequence tok13_element |
+                   /*empty*/
+;
+
+tok13_element ::= TOK1 | TOK3
+;
+
+dresses ::= dresses dress dress |
+            dress dress dress
+;
+
+dress ::= NAME:name MINUS prod_list:list SC {:
+    parser.map.put(name, list);
+:}
+;
+
+prod_list ::= prod_list:list CM prod:p {:
+        list.add(p);
+        RESULT = list;
+:} |
+            prod:p {:
+        ArrayList<Product> list = new ArrayList();
+        list.add(p);
+        RESULT = list;
+:}
+;
+
+prod ::= INT:id NAME:name COST:cost EURO {:
+        Product p = new Product(id, name, cost);
+        RESULT = p;
+:}
+;
+
+shopping ::= shopping purchase |
+            purchase
+;
+
+purchase ::= NAME:name INT:perc PERC MINUS products:list SC {:
+        ArrayList<String[]> stampare = parser.getPrice(name, perc, list);
+        System.out.println(name);
+        Double tot = 0.0;
+        Integer n_prod = 0;
+        for (String[] el : stampare) {
+            System.out.println("\"" + el[0] +"\"" + " " + el[1] + "euro");
+            tot += Double.parseDouble(el[1]);
+            n_prod += Integer.parseInt(el[2]);            
+        }
+        System.out.println("TOTAL: " + tot.toString() + "euro N_PROD: " + n_prod.toString());
+:}
+;
+
+products ::= products:list CM product:p {:
+        list.add(p);
+        RESULT = list;
+:} |
+            product:p {:
+        ArrayList<String[]> list = new ArrayList();
+        list.add(p);
+        RESULT = list;
+:}
+;
+
+product ::= NAME:name INT:qty {:
+        String[] prod = new String[2];
+        prod[0] = name;
+        prod[1] = qty.toString();
+        RESULT = prod;
+:};

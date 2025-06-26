@@ -1,0 +1,221 @@
+import java_cup.runtime.*;
+import java.util.*;
+import java.io.*;
+
+init with {:
+    
+    map = new HashMap<String, ArrayList<Room>>();
+
+:};
+
+parser code {:
+
+    HashMap<String, ArrayList<Room>> map = new HashMap<String, ArrayList<Room>>();
+
+    class Room{
+        private String name;
+        private Integer size;
+
+        // costruttore
+        Room(String name, Integer size){
+            this.name = name;
+            this.size = size;
+        }
+
+        String getName(){
+            return this.name;
+        }
+
+        Integer getSize(){
+            return this.size;
+        }
+    }
+
+    // ERROR FUNCTION
+    public void report_error(String message, Object info) {
+        System.err.print("ERROR: Syntax error");
+        if (info instanceof Symbol)
+            if (((Symbol)info).left != -1){
+                int line = (((Symbol)info).left)+1;
+                int column = (((Symbol)info).right)+1;
+                System.err.print(" (linea "+line+", colonna "+column+"): ");
+            } else System.err.print(": ");
+        else System.err.print(": ");
+    }
+
+    // ritorna il valore del simbolo alla posizione = pos (dello stack)
+    public Object stack(int pos) {
+        return (((Symbol)stack.elementAt(tos + pos)).value);
+    }
+
+    public Boolean check(String[] s, Integer size){
+        ArrayList<Room> rooms = map.get(s[0]);
+        for (Room r: rooms) {
+            if (s[1].equals(r.getName())){
+                if (size == r.getSize()){
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    public Boolean compute(Boolean s1, String o, Boolean s2){
+        if (o.equals("AND")){
+            return (s1 && s2);
+        }
+        if (o.equals("OR")){
+            return (s1 || s2);
+        }
+        return false;
+    }
+
+:};
+
+
+action code {:
+    //
+:};
+
+
+// TERMINALI
+terminal SC, CM, HOUSE, START, END, IF, THEN, FI, NOT, EQ, TRUE, FALSE, PRINT, SEP, TOK1, TOK2, TOK3, RO, RC, DOT;
+terminal String STRING, AND, OR;
+terminal Integer SIZE;
+
+
+// NON-TERMINALI
+
+non terminal prog, header, houses, preferences;
+non terminal tok3_empty, house;
+
+non terminal Room room;
+non terminal ArrayList<Room> room_list;
+non terminal if_list, if, operator;
+non terminal String print;
+non terminal ArrayList<String> print_list;
+non terminal String[] room_ref;
+non terminal Boolean bool_exp, statement;
+
+// PRECEDENCE
+precedence left OR;
+precedence left AND;
+precedence right NOT;
+
+// GRAMMAR
+
+start with prog;
+
+prog ::= header SEP houses SEP preferences
+;
+
+header ::= TOK1 TOK2 tok3_empty |
+        TOK1 tok3_empty TOK2 |
+        TOK2 TOK1 tok3_empty |
+        TOK2 tok3_empty TOK1 |
+        tok3_empty TOK1 TOK2 |
+        tok3_empty TOK2 TOK1 |
+        TOK1 TOK2 |
+        TOK2 TOK1
+;
+
+tok3_empty ::= tok3_empty TOK3 | TOK3
+;
+
+
+houses ::= houses house house | house house
+;
+
+house ::= HOUSE STRING:type START room_list:list END {:
+    parser.map.put(type, list);
+:}
+;
+
+room_list ::= room_list:list CM room:r {:
+    list.add(r);
+    RESULT = list;
+:}
+|
+        room:r {:
+    ArrayList<Room> list = new ArrayList();
+    list.add(r);
+    RESULT = list;
+:}
+;
+
+room ::= STRING:name SIZE:size {:
+    Room r = new Room(name, size);
+    RESULT = r;
+:}
+;
+
+
+preferences ::= if_list
+;
+
+if_list ::= if_list if | /*empty*/
+;
+
+if ::= IF bool_exp:s1 THEN print_list:list FI {:
+        if(s1){
+            for (String s: list){
+                System.out.println("\""+ s +"\"");
+            }
+        }
+:}
+;
+
+bool_exp ::= NOT bool_exp:s1 {:
+        Boolean result = !s1;
+        RESULT = result;
+:} | 
+            RO bool_exp:s1 operator:o statement:s2 RC {:
+        Boolean result = parser.compute((Boolean) s1, (String) o, (Boolean) s2);
+        RESULT = result;
+:} | 
+            bool_exp:s1 operator:o statement:s2 {:
+        Boolean result = parser.compute((Boolean) s1, (String) o, (Boolean) s2);
+        RESULT = result;
+:} |
+            statement:s {:
+        RESULT = s;
+:}
+;
+
+statement ::= room_ref:s EQ SIZE:size {:
+        Boolean result = parser.check(s, size);
+        RESULT = result;
+:}
+;
+
+operator ::= AND:o {:
+        RESULT = o;
+:} | OR:o {:
+        RESULT = o;
+:}
+;
+
+room_ref ::= STRING:type DOT STRING:room_name {:
+        String[] tmp = new String[2];
+        tmp[0] = type;
+        tmp[1] = room_name;
+        RESULT = tmp;
+:}
+;
+
+
+print_list ::= print_list:list print:p {:
+        list.add(p);
+        RESULT = list;
+:}
+| print:p {:
+        ArrayList<String> list = new ArrayList();
+        list.add(p);
+        RESULT = list;
+:}
+;
+
+print ::= PRINT STRING:s SC {:
+        RESULT = s;
+:}
+;

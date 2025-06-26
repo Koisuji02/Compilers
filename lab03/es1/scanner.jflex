@@ -5,6 +5,17 @@ import java_cup.runtime.*;
 %unicode
 %cup
 
+%{
+    private Symbol my_symbol(int type){
+        System.out.println("SYMBOL: "+yytext());
+        return new Symbol(type, yyline, yycolumn);    
+    }
+    private Symbol my_symbol(int type, Object value){       //Semantic analysis
+        System.out.println("SYMBOL: "+yytext());
+        return new Symbol(type, yyline, yycolumn, value);    
+    }
+%}
+
 %init{
     //
 %init}
@@ -15,33 +26,33 @@ import java_cup.runtime.*;
 
 comment = "/*"([^*] | (\*+[^*/]))*\*+"/"
 
-square_open             = [\[]
-square_close            = [\]]
-round_open              = [\(]
-round_close             = [\)]
-brace_open              = [\{]
-brace_close             = [\}]
+square_open             = \[
+square_close            = \]
+round_open              = \(
+round_close             = \)
+brace_open              = \{
+brace_close             = \}
 
-plus                    = [\+]
-minus                   = [\-]
-star                    = [\*]
-dash                    = [\/]
-equal                   = [\=]
-minor                   = [\<]
-major                   = [\>]
+plus                    = \+
+minus                   = \-
+star                    = \*
+dash                    = \/
+equal                   = \=
+minor                   = \<
+major                   = \>
 
-semicolon               = [\;]
-dot                     = [\.]
-colon                   = [\,]
+semicolon               = \;
+dot                     = \.
+colon                   = \,
 
-and                     = [\&\&]
-or                      = [\|\|]
-not                     = [\!]
+and                     = \&\&
+or                      = \|\|
+not                     = \!
 
-eq                      = "=="
-leq                     = "<="
-geq                     = ">="
-neq                     = "!="
+eq                      = \=\=
+leq                     = \<\=
+geq                     = \>\=
+neq                     = \!\=
 
 int_type                = "int"
 double_type             = "double"
@@ -51,7 +62,7 @@ while                   = "while"
 print                   = "print"
 
 int                     = [0-9]+
-double                  = [0-9]+(\.)[0-9]+
+double                  = {int}\.{int}
 
 id                      = [_a-zA-Z][_a-zA-Z0-9]*
 
@@ -60,167 +71,37 @@ discard = ("#include"[.]*[\n\r]) | [\t\n\r] | (" ")
 %%
 
 {comment} { /* Ignora i commenti multilinea */ }
-
-{square_open} {
-    System.out.print("SO ");
-    return new Symbol(sym.SQUARE_OPEN);
-}
-
-{square_close} {
-    System.out.print("SC ");
-    return new Symbol(sym.SQUARE_CLOSE);
-}
-
-{round_open} {
-    System.out.print("RO ");
-    return new Symbol(sym.ROUND_OPEN);
-}
-
-{round_close} {
-    System.out.print("RC ");
-    return new Symbol(sym.ROUND_CLOSE);
-}
-
-{brace_open} {
-    System.out.print("BO ");
-    return new Symbol(sym.BRACE_OPEN);
-}
-
-{brace_close} {
-    System.out.print("BC ");
-    return new Symbol(sym.BRACE_CLOSE);
-}
-
-{eq} {
-    System.out.print("EQ ");
-    return new Symbol(sym.EQ);
-}
-
-{leq} {
-    System.out.print("LEQ ");
-    return new Symbol(sym.LEQ);
-}
-
-{geq} {
-    System.out.print("GEQ ");
-    return new Symbol(sym.GEQ);
-}
-
-{neq} {
-    System.out.print("NEQ ");
-    return new Symbol(sym.NEQ);
-}
-
-{plus} {
-    System.out.print("PLUS ");
-    return new Symbol(sym.PLUS);
-}
-
-{minus} {
-    System.out.print("MINUS ");
-    return new Symbol(sym.MINUS);
-}
-
-{star} {
-    System.out.print("STAR ");
-    return new Symbol(sym.STAR);
-}
-
-{dash} {
-    System.out.print("DASH ");
-    return new Symbol(sym.DASH);
-}
-
-{equal} {
-    System.out.print("EQ ");
-    return new Symbol(sym.EQUAL);
-}
-
-{minor} {
-    System.out.print("MIN ");
-    return new Symbol(sym.MINOR);
-}
-
-{major} {
-    System.out.print("MAJ ");
-    return new Symbol(sym.MAJOR);
-}
-
-{semicolon} {
-    System.out.print("S ");
-    return new Symbol(sym.SEMICOLON);
-}
-
-{dot} {
-    System.out.print("D ");
-    return new Symbol(sym.DOT);
-}
-
-{colon} {
-    System.out.print("C ");
-    return new Symbol(sym.COMMA);
-}
-
-{and} {
-    System.out.print("AND ");
-    return new Symbol(sym.AND);
-}
-
-{or} {
-    System.out.print("OR ");
-    return new Symbol(sym.OR);
-}
-
-{not} {
-    System.out.print("NOT ");
-    return new Symbol(sym.NOT);
-}
-
-{int_type} {
-    System.out.print("INT_TYPE ");
-    return new Symbol(sym.INT_TYPE);
-}
-
-{double_type} {
-    System.out.print("DOUBLE_TYPE ");
-    return new Symbol(sym.DOUBLE_TYPE);
-}
-
-{if} {
-    System.out.print("IF ");
-    return new Symbol(sym.IF);
-}
-
-{else} {
-    System.out.print("ELSE ");
-    return new Symbol(sym.ELSE);
-}
-
-{while} {
-    System.out.print("WHILE ");
-    return new Symbol(sym.WHILE);
-}
-
-{print} {
-    System.out.print("PRINT ");
-    return new Symbol(sym.PRINT);
-}
-
-{int} {
-    System.out.print("INT:"+yytext()+" ");
-    return new Symbol(sym.INT);
-}
-
-{double} {
-    System.out.print("DOUBLE:"+yytext()+" ");
-    return new Symbol(sym.DOUBLE);
-}
-
-{id} {
-    System.out.print("ID:"+yytext()+" ");
-    return new Symbol(sym.ID);
-}
-
+{square_open} {return my_symbol(sym.SQUARE_OPEN);}
+{square_close} {return my_symbol(sym.SQUARE_CLOSE);}
+{round_open} {return my_symbol(sym.ROUND_OPEN);}
+{round_close} {return my_symbol(sym.ROUND_CLOSE);}
+{brace_open} {return my_symbol(sym.BRACE_OPEN);}
+{brace_close} {return my_symbol(sym.BRACE_CLOSE);}
+{eq} {return my_symbol(sym.EQ);}
+{leq} {return my_symbol(sym.LEQ);}
+{geq} {return my_symbol(sym.GEQ);}
+{neq} {return my_symbol(sym.NEQ);}
+{plus} {return my_symbol(sym.PLUS);}
+{minus} {return my_symbol(sym.MINUS);}
+{star} {return my_symbol(sym.STAR);}
+{dash} {return my_symbol(sym.DASH);}
+{equal} {return my_symbol(sym.EQUAL);}
+{minor} {return my_symbol(sym.MINOR);}
+{major} {return my_symbol(sym.MAJOR);}
+{semicolon} {return my_symbol(sym.SEMICOLON);}
+{dot} {return my_symbol(sym.DOT);}
+{colon} {return my_symbol(sym.COMMA);}
+{and} {return my_symbol(sym.AND);}
+{or} {return my_symbol(sym.OR);}
+{not} {return my_symbol(sym.NOT);}
+{int_type} {return my_symbol(sym.INT_TYPE);}
+{double_type} {return my_symbol(sym.DOUBLE_TYPE);}
+{if} {return my_symbol(sym.IF);}
+{else} {return my_symbol(sym.ELSE);}
+{while} {return my_symbol(sym.WHILE);}
+{print} {return my_symbol(sym.PRINT);}
+{int} {return my_symbol(sym.INT);}
+{double} {return my_symbol(sym.DOUBLE);}
+{id} {return my_symbol(sym.ID);}
 {discard}   {;}
-
 .           {;}

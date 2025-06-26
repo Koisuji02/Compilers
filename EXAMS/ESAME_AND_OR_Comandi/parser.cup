@@ -1,0 +1,224 @@
+import java_cup.runtime.*;
+import java.util.*;
+import java.util.Map.Entry;
+import java.io.*;
+
+init with {:
+    
+    map = new HashMap<String, Boolean>();
+
+:};
+
+parser code {:
+
+    HashMap<String, Boolean> map = new HashMap<String, Boolean>();
+
+    class Action{
+        private Boolean value;
+        private String printable;
+
+        // costruttore
+        Action(Boolean value, String printable){
+            this.value = value;
+            this.printable = printable;
+        }
+
+        Boolean getValue(){
+            return this.value;
+        }
+
+        String getPrintable(){
+            return this.printable;
+        }
+    }
+
+    // ERROR FUNCTION
+    public void report_error(String message, Object info) {
+        System.err.print("ERROR: Syntax error");
+        if (info instanceof Symbol)
+            if (((Symbol)info).left != -1){
+                int line = (((Symbol)info).left)+1;
+                int column = (((Symbol)info).right)+1;
+                System.err.print(" (linea "+line+", colonna "+column+"): ");
+            } else System.err.print(": ");
+        else System.err.print(": ");
+    }
+
+    // ritorna il valore del simbolo alla posizione = pos (dello stack)
+    public Object stack(int pos) {
+        return (((Symbol)stack.elementAt(tos + pos)).value);
+    }
+
+    public Boolean compute(Boolean s1, String o, Boolean s2){
+        if (o.equals("AND")){
+            return (s1 && s2);
+        }
+        if (o.equals("OR")){
+            return (s1 || s2);
+        }
+        return false;
+    }
+
+:};
+
+
+action code {:
+    //
+:};
+
+
+// TERMINALI
+terminal SC, CM, RBO, RBC, SBO, SBC, SEP, TOK1, TOK2, TOK3, CMP, FZ_AND, WITH, PRINT, EQ;
+terminal String STRING, AND, OR, NOT, TRUE, FALSE, VAR;
+
+
+// NON-TERMINALI
+
+non terminal prog, header, command_section, command_list, command, assignment, cmp_command, tok3s, tok2s, tok1s;
+
+non terminal Action act;
+non terminal ArrayList<Action> action_list;
+non terminal Boolean operand, bool_expr;
+non terminal ArrayList<Boolean> operand_list;
+non terminal String operator, print;
+
+// PRECEDENCE
+precedence left OR;
+precedence left AND;
+precedence right NOT;
+
+// GRAMMAR
+
+start with prog;
+
+prog ::= header SEP command_section
+;
+
+
+header ::= tok3s tok2s tok1s tok3s |
+tok3s tok1s tok2s |
+tok1s tok3s tok2s |
+tok1s tok2s tok3s |
+tok2s tok3s tok1s |
+tok2s tok1s tok3s |
+
+tok1s tok2s |
+tok3s tok2s |
+tok2s tok3s |
+tok2s |
+tok2s tok1s |
+
+tok3s tok1s |
+tok1s tok3s |
+tok1s |
+tok3s 
+;
+
+
+tok3s ::= tok3s TOK3 SC | TOK3 SC;
+tok1s ::= tok1s TOK1 SC | TOK1 SC;
+tok2s ::= TOK2 SC TOK2 SC TOK2 SC TOK2 SC | TOK2 SC ;
+
+command_section ::= command_list | /*empty*/
+;
+
+command_list ::= command_list command command | command command command command
+;
+
+
+command ::= assignment | cmp_command
+;
+
+assignment ::= VAR:var EQ bool_expr:b SC {:
+    parser.map.put(var, b);
+    System.out.println("Assignent: "+ var + " = " + b.toString());
+:}
+;
+
+cmp_command ::= CMP bool_expr:b action_list:list {:
+    for (Action a: list) {
+        if (a.getValue() == b) {
+            System.out.println(a.getPrintable());
+        }
+    }
+:}
+;
+
+action_list ::= action_list:list act:a {:
+    list.add(a);
+    RESULT = list;
+:} | act:a {:
+    ArrayList<Action> list = new ArrayList();
+    list.add(a);
+    RESULT = list;
+:}
+;
+
+act ::= WITH bool_expr:b SBO print:p SBC {:
+    Action a = new Action(b, p);
+    RESULT = a;
+:}
+;
+
+print ::= PRINT RBO STRING:s RBC SC {:
+    RESULT = s;
+:}
+;
+
+bool_expr ::= NOT bool_expr:s1 {:
+        Boolean result = !s1;
+        RESULT = result;
+:} | 
+            RBO bool_expr:s1 RBC {:
+        RESULT = s1;
+:} | 
+            bool_expr:s1 operator:o bool_expr:s2 {:
+        Boolean result = parser.compute((Boolean) s1, (String) o, (Boolean) s2);
+        RESULT = result;
+:} |
+            operand:s {:
+        RESULT = s;
+:}
+;
+
+operand ::= TRUE:t {:
+        Boolean r = true;
+        RESULT = r;
+:} |
+            FALSE:f {:
+        Boolean r = false;
+        RESULT = r;
+:} |
+            VAR:var {:
+        Boolean r = parser.map.get(var);
+        RESULT = r;
+            :} |
+            FZ_AND RBO operand_list:list RBC {:
+        Boolean r = true;
+        for (Boolean b: list) {
+            if (b == false) {
+                r = false;
+            }
+        }
+        RESULT = r;
+            :}
+;
+
+operand_list ::= operand_list:list CM bool_expr:r {:
+        list.add(r);
+        RESULT = list;
+:} | bool_expr:r {:
+        ArrayList<Boolean> list = new ArrayList();
+        list.add(r);
+        RESULT = list;
+:}
+;
+
+operator ::= AND:o {:
+        RESULT = o;
+:} | OR:o {:
+        RESULT = o;
+:}
+;
+
+

@@ -1,0 +1,267 @@
+import java_cup.runtime.*;
+import java.util.*;
+import java.util.Map.Entry;
+import java.io.*;
+
+init with {:
+    
+    map = new HashMap<String, ArrayList<Material>>();
+
+:};
+
+parser code {:
+
+    HashMap<String, ArrayList<Material>> map = new HashMap<String, ArrayList<Material>>();
+
+    class Material{
+        private String name;
+        private Double price;
+
+        // costruttore
+        Material(String name, Double price){
+            this.name = name;
+            this.price = price;
+        }
+
+        String getName(){
+            return this.name;
+        }
+
+        Double getPrice(){
+            return this.price;
+        }
+    }
+
+    class Product{
+        private String name;
+        private Double tax;
+        private ArrayList<Element> list;
+
+        // costruttore
+        Product(String name, Double tax, ArrayList<Element> list){
+            this.name = name;
+            this.tax = tax;
+            this.list = list;
+        }
+
+        String getName(){
+            return this.name;
+        }
+
+        Double getTax(){
+            return this.tax;
+        }
+
+        ArrayList<Element> getlist(){
+            return this.list;
+        }
+    }
+
+    class Element{
+        private String name;
+        private ArrayList<Component> list;
+
+        // costruttore
+        Element(String name, ArrayList<Component> list){
+            this.name = name;
+            this.list = list;
+        }
+
+        String getName(){
+            return this.name;
+        }
+
+        ArrayList<Component> getlist(){
+            return this.list;
+        }
+    }
+
+    class Component{
+        private String name;
+        private Integer qty;
+
+        // costruttore
+        Component(String name, Integer qty){
+            this.name = name;
+            this.qty = qty;
+        }
+
+        String getName(){
+            return this.name;
+        }
+
+        Integer getQty(){
+            return this.qty;
+        }
+    }
+    
+
+    // ERROR FUNCTION
+    public void report_error(String message, Object info) {
+        System.err.print("ERROR: Syntax error");
+        if (info instanceof Symbol)
+            if (((Symbol)info).left != -1){
+                int line = (((Symbol)info).left)+1;
+                int column = (((Symbol)info).right)+1;
+                System.err.print(" (linea "+line+", colonna "+column+"): ");
+            } else System.err.print(": ");
+        else System.err.print(": ");
+    }
+
+    // ritorna il valore del simbolo alla posizione = pos (dello stack)
+    public Object stack(int pos) {
+        return (((Symbol)stack.elementAt(tos + pos)).value);
+    }
+
+:};
+
+
+action code {:
+    //
+:};
+
+
+// TERMINALI
+terminal SC, CO, CM, GBO, GBC, DOT, EURO, KG, EUROKG, SEP, TOK1, TOK2;
+terminal String STRING;
+terminal Double NUMBER;
+terminal Integer QTY;
+
+
+// NON-TERMINALI
+
+non terminal prog, header, warehouse, products, product, tok1_list, tok2_list, option2, material_type, tok1_option, tok1E;
+
+non terminal Material material;
+non terminal ArrayList<Material> material_list;
+non terminal Element element;
+non terminal ArrayList<Element> element_list;
+non terminal Component component;
+non terminal ArrayList<Component> component_list;
+
+// PRECEDENCE
+
+// GRAMMAR
+
+start with prog;
+
+prog ::= header SEP warehouse SEP products
+;
+
+header ::= tok1_list tok2_list | option2
+;
+
+tok1_list ::= tok1_list TOK1 TOK1 |
+                TOK1 TOK1 TOK1 TOK1
+;
+
+tok2_list ::= TOK2 TOK2 TOK2 |
+            TOK2 TOK2 TOK2 TOK2 TOK2 TOK2 TOK2 TOK2 TOK2 |
+            TOK2 TOK2 TOK2 TOK2 TOK2 TOK2 TOK2 TOK2 TOK2 TOK2 TOK2 TOK2
+;
+
+option2 ::= TOK2 tok1E TOK2 tok1E |
+            TOK2 tok1E TOK2 tok1E TOK2 tok1E;
+
+tok1E ::= tok1_option | /*empty*/;
+tok1_option ::= tok1_option TOK1 | TOK1;
+
+warehouse ::= warehouse material_type material_type |
+            material_type material_type {:
+        System.out.println("---");
+:}
+;
+
+material_type ::= GBO material_list:list GBC STRING:name SC {:
+        String min_name = "";
+        String max_name = "";
+        Double min = 2000.0;
+        Double max = 0.0;
+        parser.map.put(name, list);
+        for (Material m: list){
+            if (m.getPrice() > max) {
+                max = m.getPrice();
+                max_name = m.getName();
+            }
+            if (m.getPrice() < min) {
+                min = m.getPrice();
+                min_name = m.getName();
+            }
+        }
+        System.out.println(name+": less: "+ min_name + ", more: "+max_name);
+:}
+;
+
+material_list ::= material_list:list CM material:m {:
+    list.add(m);
+    RESULT = list;
+:} |
+                    material:m {:
+    ArrayList<Material> list = new ArrayList();
+    list.add(m);
+    RESULT = list;
+:}
+;
+
+material ::= STRING:name NUMBER:price EUROKG {:
+    Material m = new Material(name, price);
+    RESULT = m;
+:}
+;
+
+
+products ::= products product | /*empty*/
+;
+
+product ::= NUMBER:tax EURO STRING:name CO element_list:list SC {:
+    Product p = new Product(name, tax, list);
+    System.out.println(p.getName());
+    for (Element e: list){
+        for (Component c: e.getlist()){
+            // Trova il materiale corrispondente nel tipo di materiale
+            for (Material m: parser.map.get(e.getName())) {
+                if (c.getName().equals(m.getName())){
+                    Double qty = (double)c.getQty();
+                    Double price = qty * m.getPrice() + tax;
+                    System.out.println(m.getName() + " " +price+" euro");
+                    break;
+                }
+            }
+        }
+    }
+:}
+;
+
+element_list ::= element_list:list CM element:m {:
+    list.add(m);
+    RESULT = list;
+:} |
+                    element:m {:
+    ArrayList<Element> list = new ArrayList();
+    list.add(m);
+    RESULT = list;
+:}
+;
+
+element ::= STRING:name GBO component_list:list GBC {:
+    Element e = new Element(name, list);
+    RESULT = e;    
+:}
+;
+
+component_list ::= component_list:list CM component:m {:
+    list.add(m);
+    RESULT = list;
+:} |
+                    component:m {:
+    ArrayList<Component> list = new ArrayList();
+    list.add(m);
+    RESULT = list;
+:}
+;
+
+component ::= STRING:name QTY:q KG {:
+    Component m = new Component(name, q);
+    RESULT = m;
+:}
+;

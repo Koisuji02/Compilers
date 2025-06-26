@@ -1,0 +1,209 @@
+import java_cup.runtime.*;
+import java.util.*;
+import java.util.Map.Entry;
+import java.io.*;
+
+init with {:
+    
+    map = new HashMap<String, ArrayList<Food>>();
+
+:};
+
+parser code {:
+
+    HashMap<String, ArrayList<Food>> map = new HashMap<String, ArrayList<Food>>();
+
+    class Food{
+        private String name;
+        private Double price;
+
+        // costruttore
+        Food(String name, Double price){
+            this.name = name;
+            this.price = price;
+        }
+
+        String getName(){
+            return this.name;
+        }
+
+        Double getPrice(){
+            return this.price;
+        }
+    }
+
+    class Ingredient{
+        private String category;
+        private String food;
+        private Double weight;
+
+        // costruttore
+        Ingredient(String category, String food, Double weight){
+            this.category = category;
+            this.food = food;
+            this.weight = weight;
+        }
+
+        String getCategory(){
+            return this.category;
+        }
+
+        String getFood(){
+            return this.food;
+        }
+
+        Double getWeight(){
+            return this.weight;
+        }
+    }
+
+    // ERROR FUNCTION
+    public void report_error(String message, Object info) {
+        System.err.print("ERROR: Syntax error");
+        if (info instanceof Symbol)
+            if (((Symbol)info).left != -1){
+                int line = (((Symbol)info).left)+1;
+                int column = (((Symbol)info).right)+1;
+                System.err.print(" (linea "+line+", colonna "+column+"): ");
+            } else System.err.print(": ");
+        else System.err.print(": ");
+    }
+
+    // ritorna il valore del simbolo alla posizione = pos (dello stack)
+    public Object stack(int pos) {
+        return (((Symbol)stack.elementAt(tos + pos)).value);
+    }
+
+:};
+
+
+action code {:
+    //
+:};
+
+
+
+// TERMINALI
+terminal SC, CO, CM, SQO, SQC, DOT, EUROKG, KG, SEP, TOK1, TOK2;
+terminal String STRING;
+terminal Double WEIGHT, KGPRICE;
+terminal Integer NUMBER;
+
+
+// NON-TERMINALI
+
+non terminal prog, header, food_section, food_categories, food_category_pair, recipes, food_category, colon_empty, recipe;
+
+non terminal Food food;
+non terminal ArrayList<Food> food_list;
+non terminal Ingredient ingredient;
+non terminal ArrayList<Ingredient> ingredient_list;
+
+// PRECEDENCE
+
+// GRAMMAR
+
+start with prog;
+
+prog ::= header SEP food_section SEP recipes
+;
+
+header ::= header TOK2 | 
+            TOK1 TOK2 TOK2 |
+            TOK2 TOK1 TOK2 |
+            TOK2 TOK2 TOK1
+;
+
+food_section ::= food_categories {:
+    String max_name = "", min_name = "";
+    Double max = 0.0;
+    Double min = 200000.0;
+    boolean first = true;
+    for (Map.Entry<String, ArrayList<Food>> e : parser.map.entrySet()) {
+        for (Food f : e.getValue()) {
+            if (first || f.getPrice() > max){
+                max = f.getPrice();
+                max_name = f.getName();
+            }
+            if (first || f.getPrice() < min){
+                min = f.getPrice();
+                min_name = f.getName();
+                first = false;
+            }
+        }
+    }
+    if (!first) {
+        System.out.printf("Less expensive: \"%s\" %.2f EURO/kg%n", min_name, min);
+        System.out.printf("More expensive: \"%s\" %.2f EURO/kg%n", max_name, max);
+    }
+    System.out.println("----");
+:}
+;
+
+food_categories ::= food_categories food_category_pair | /* empty */
+;
+
+food_category_pair ::= food_category food_category
+;
+
+food_category ::= STRING:name CO SQO food_list:list SQC SC {:
+    parser.map.put(name, list);
+:}
+;
+
+food_list ::= food_list:list CM food:f {:
+    list.add(f);
+    RESULT = list;
+:} | food:f {:
+    ArrayList<Food> list = new ArrayList();
+    list.add(f);
+    RESULT = list;
+:}
+;
+
+food ::= STRING:name CO KGPRICE:price EUROKG {:
+    Food food = new Food(name, price);
+    RESULT = food;
+:}
+;
+
+
+recipes ::= recipes recipe | /* empty */
+;
+
+recipe ::= NUMBER:n STRING:name colon_empty ingredient_list:list SC {:
+    System.out.println(name);
+    Double tot = 0.0;
+    for (Ingredient i: list) {
+        ArrayList<Food> f_list = parser.map.get(i.getCategory());
+        for (Food f: f_list){
+            if (f.getName().equals(i.getFood())) {
+                Double price = f.getPrice() * i.getWeight() * n;
+                tot += price;
+                System.out.printf("\"%s\" %.2f EURO%n", f.getName(), price);
+            }
+        }
+    }
+    System.out.printf("TOT: %.2f EURO%n", tot);
+:}
+;
+
+colon_empty ::= CO | /* empty */
+;
+
+
+ingredient_list ::= ingredient_list:list CM ingredient:i {:
+    list.add(i);
+    RESULT = list;
+:} | ingredient:i {:
+    ArrayList<Ingredient> list = new ArrayList();
+    list.add(i);
+    RESULT = list;
+:}
+;
+
+ingredient ::= STRING:category DOT STRING:food WEIGHT:weight KG {:
+    Ingredient i = new Ingredient(category, food, weight);
+    RESULT = i;
+:}
+;

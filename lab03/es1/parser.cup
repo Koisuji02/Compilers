@@ -39,15 +39,23 @@ precedence nonassoc ELSE;
 
 // GRAMMAR DEFINITION
 
+// Le regole con error devono essere posizionate dopo le regole corrette per evitare conflitti
+
 start with program;
 
-program ::= declaration_list statement_list;
+program ::= declaration_list statement_list {: System.out.println("Success!!!"); :};
 
 declaration_list ::= /* empty */ 
 					| declaration_list declaration;
 
 declaration ::= INT_TYPE id_list SEMICOLON
-					| DOUBLE_TYPE id_list SEMICOLON;
+					| DOUBLE_TYPE id_list SEMICOLON
+
+					// Errori nelle dichiarazioni
+					| INT_TYPE error SEMICOLON
+                		{: System.err.println("ERROR: Error in declaration (linea " + ((Symbol) $2).left + ")"); :}
+					| DOUBLE_TYPE error SEMICOLON
+                		{: System.err.println("ERROR: Error in declaration (linea " + ((Symbol) $2).left + ")"); :};
 
 id_list ::= ID
 			| ID SQUARE_OPEN INT SQUARE_CLOSE
@@ -63,10 +71,41 @@ statement ::= assignment SEMICOLON
 			| WHILE ROUND_OPEN expression ROUND_CLOSE statement
 			| IF ROUND_OPEN expression ROUND_CLOSE statement %prec LOWER_THAN_ELSE
 			| IF ROUND_OPEN expression ROUND_CLOSE statement ELSE statement
-			| BRACE_OPEN statement_list BRACE_CLOSE;
+			| BRACE_OPEN statement_list BRACE_CLOSE
+			// mancanza di ";" prima di "}"
+			| PRINT ROUND_OPEN ID ROUND_CLOSE error BRACE_CLOSE
+			| PRINT ROUND_OPEN ID SQUARE_OPEN expression SQUARE_CLOSE ROUND_CLOSE error BRACE_CLOSE
+			// errore nella print
+			| PRINT ROUND_OPEN error ROUND_CLOSE SEMICOLON
+                {: System.err.println("ERROR: Error in 'print' instruction (linea " + ((Symbol) $3).left + ")"); :}
+			// errore else mancante in if
+			| IF ROUND_OPEN expression ROUND_CLOSE statement error
+                {: System.err.println("ERROR: 'else' expected in 'if' instruction (linea " + ((Symbol) $6).left + ")"); :}
+			// errore condizione di if
+			| IF ROUND_OPEN error ROUND_CLOSE statement
+                {: System.err.println("ERROR: Error in 'if' condition (linea " + ((Symbol) $3).left + ")"); :}
+			// errore "(" o ")" mancante in if
+			| IF error expression ROUND_CLOSE statement
+                {: System.err.println("ERROR: '(' expected in 'if' instruction (linea " + ((Symbol) $2).left + ")"); :}
+            | IF ROUND_OPEN expression error statement
+                {: System.err.println("ERROR: ')' expected in 'if' instruction (linea " + ((Symbol) $4).left + ")"); :}
+			// errore nel while
+			| WHILE ROUND_OPEN error ROUND_CLOSE statement
+                {: System.err.println("ERROR: Error in 'while' condition (linea " + ((Symbol) $3).left + ")"); :}
+			// errore "(" o ")" mancante nel while
+			|WHILE error expression ROUND_CLOSE statement
+                {: System.err.println("ERROR: '(' expected in 'while' instruction (linea " + ((Symbol) $2).left + ")"); :}
+            | WHILE ROUND_OPEN expression error statement
+                {: System.err.println("ERROR: ')' expected in 'while' instruction (linea " + ((Symbol) $4).left + ")"); :}
+			// errore generico
+			| error
+                {: System.err.println("ERROR: Error in statement (linea " + ((Symbol) $1).left + ")"); :};
 
 assignment ::= ID EQUAL expression
-			| ID SQUARE_OPEN expression SQUARE_CLOSE EQUAL expression;
+			| ID SQUARE_OPEN expression SQUARE_CLOSE EQUAL expression
+			// errore assegnazione
+			| ID EQUAL error
+                {: System.err.println("ERROR: Error in assignment (linea " + ((Symbol) $3).left + ")"); :};
 
 expression ::= INT
 			| DOUBLE
@@ -82,5 +121,16 @@ expression ::= INT
 			| expression NEQ expression
 			| expression AND expression
 			| expression OR expression
+			| expression MAJOR expression
+			| expression MINOR expression
 			| NOT expression
-			| ROUND_OPEN expression ROUND_CLOSE;
+			| MINUS expression
+			| ROUND_OPEN expression ROUND_CLOSE
+			// errori nelle espressioni
+			| expression PLUS error
+                {: System.err.println("ERROR: Error in expression (linea " + ((Symbol) $3).left + ")"); :}
+			|expression MINUS error
+                {: System.err.println("ERROR: Error in expression (linea " + ((Symbol) $3).left + ")"); :}
+			// errore vettore
+			| ID SQUARE_OPEN error SQUARE_CLOSE
+                {: System.err.println("ERROR: Error in vector access (linea " + ((Symbol) $3).left + ")"); :};

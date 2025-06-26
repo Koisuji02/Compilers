@@ -1,0 +1,89 @@
+import java_cup.runtime.*;
+
+// PARSER CODE (error reports)
+parser code {:
+    public void report_error(String message, Object info) {
+        System.err.print("ERROR: Syntax error");
+        if (info instanceof Symbol)
+            if (((Symbol)info).left != -1){
+                int line = (((Symbol)info).left)+1;
+                int column = (((Symbol)info).right)+1;
+                System.err.print(" (linea "+line+", colonna "+column+"): ");
+            } else System.err.print(": ");
+        else System.err.print(": ");
+    }
+:};
+
+// TERMINAL SYMBOLS
+terminal PLUS, MINUS, STAR, DASH, EQUAL, MINOR, MAJOR, SEMICOLON, DOT, COMMA;
+terminal SQUARE_OPEN, SQUARE_CLOSE, ROUND_OPEN, ROUND_CLOSE, BRACE_OPEN, BRACE_CLOSE;
+terminal AND, OR, NOT, EQ, LEQ, GEQ, NEQ;
+terminal INT_TYPE, DOUBLE_TYPE, IF, ELSE, WHILE, PRINT;
+terminal INT, DOUBLE, ID;
+terminal LOWER_THAN_ELSE;
+
+// NON-TERMINAL SYMBOLS
+non terminal program, declaration_list, statement_list, statement, expression, declaration, id_list, assignment;
+
+// PRECEDENCE RULES
+precedence left OR;
+precedence left AND;
+precedence left EQ, NEQ;
+precedence left LEQ, GEQ, MINOR, MAJOR;
+precedence left PLUS, MINUS;
+precedence left STAR, DASH;
+precedence right NOT;
+precedence nonassoc LOWER_THAN_ELSE;
+precedence nonassoc ELSE;
+
+
+// GRAMMAR DEFINITION
+
+start with program;
+
+program ::= declaration_list statement_list {: System.out.println("Success!!!"); :};
+
+declaration_list ::= /* empty */ 
+					| declaration_list declaration;
+
+declaration ::= INT_TYPE id_list SEMICOLON
+					| DOUBLE_TYPE id_list SEMICOLON;
+
+id_list ::= ID
+			| ID SQUARE_OPEN INT SQUARE_CLOSE
+			| id_list COMMA ID SQUARE_OPEN INT SQUARE_CLOSE
+			| id_list COMMA ID;
+
+statement_list ::= /* empty */
+					| statement_list statement;
+
+statement ::= assignment SEMICOLON
+			| PRINT ROUND_OPEN ID ROUND_CLOSE SEMICOLON
+			| PRINT ROUND_OPEN ID SQUARE_OPEN expression SQUARE_CLOSE ROUND_CLOSE SEMICOLON
+			| WHILE ROUND_OPEN expression ROUND_CLOSE statement
+			| IF ROUND_OPEN expression ROUND_CLOSE statement %prec LOWER_THAN_ELSE
+			| IF ROUND_OPEN expression ROUND_CLOSE statement ELSE statement
+			| BRACE_OPEN statement_list BRACE_CLOSE;
+
+assignment ::= ID EQUAL expression
+			| ID SQUARE_OPEN expression SQUARE_CLOSE EQUAL expression;
+
+expression ::= INT
+			| DOUBLE
+			| ID
+			| ID SQUARE_OPEN expression SQUARE_CLOSE
+			| expression PLUS expression
+			| expression MINUS expression
+			| expression STAR expression
+			| expression DASH expression
+			| expression EQ expression
+			| expression LEQ expression
+			| expression GEQ expression
+			| expression NEQ expression
+			| expression AND expression
+			| expression OR expression
+			| expression MAJOR expression
+			| expression MINOR expression
+			| NOT expression
+			| MINUS expression
+			| ROUND_OPEN expression ROUND_CLOSE;

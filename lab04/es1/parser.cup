@@ -1,0 +1,61 @@
+import java_cup.runtime.*;
+
+// PARSER CODE (error reports)
+parser code {:
+    public void report_error(String message, Object info){
+        System.err.print("ERROR: Syntax error");
+        if (info instanceof Symbol){
+            if(((Symbol)info).left != -1){
+                int line = (((Symbol)info).left)+1;
+                int column = (((Symbol)info).right)+1;
+                System.err.print(" (linea "+line+", colonna "+column+"): "+message);
+            } else {
+                System.err.print(": "+message);
+            }
+        }
+        else {
+            System.err.print(": "+message);
+        }
+    }
+    public void syntax_error(Symbol s){
+        report_error("Syntax error", s);
+    }
+:};
+
+// TERMINAL SYMBOLS
+terminal COMMENT, ATOM, VAR, IS, RS, DOT, RO, RC, COM;
+
+// NON-TERMINAL SYMBOLS
+non terminal elem, functor, predicate_list, predicate, argument, interrogation, rule, fact, el_predicate, list_predicates, program_list, prog;
+
+// PRECEDENCE RULES
+
+
+
+// GRAMMAR DEFINITION
+
+start with prog;
+
+prog ::= program_list {: System.out.println("Success!!!"); :};
+
+program_list ::= program_list elem | elem;
+
+elem ::= COMMENT | interrogation | fact | rule;
+
+functor ::= ATOM RO;
+
+argument ::= predicate | VAR;
+
+list_predicates ::= list_predicates COM predicate | predicate;
+
+predicate ::= functor predicate_list RC | ATOM;
+
+predicate_list ::= predicate_list COM el_predicate | el_predicate;
+
+el_predicate ::= argument;
+
+interrogation ::= IS list_predicates DOT;
+
+rule ::= predicate RS list_predicates DOT;
+
+fact ::= predicate DOT;

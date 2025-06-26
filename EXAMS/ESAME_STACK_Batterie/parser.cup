@@ -1,0 +1,295 @@
+import java_cup.runtime.*;
+import java.io.*;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.List;
+import java.util.ArrayList;
+
+
+init with {:
+:};
+
+
+parser code {:
+    
+    public void report_error(String message, Object info) {
+        System.err.print("ERROR: Syntax error");
+        if (info instanceof Symbol)
+            if (((Symbol)info).left != -1){
+                int line = (((Symbol)info).left)+1;
+                int column = (((Symbol)info).right)+1;
+                System.err.print(" (linea "+line+", colonna "+column+"): ");
+            } else System.err.print(": ");
+        else System.err.print(": ");
+    }
+    
+    // ritorna il semantic value del simbolo alla posizione pos [dalla teoria]
+    public Object stack(int pos) {
+        return (((Symbol)stack.elementAt(tos + pos)).value);
+    }    Double getMax(ArrayList<Double> list) {
+        if (list == null || list.isEmpty()) {
+            return 0.0;
+        }
+        
+        Double max = list.get(0);
+        for (Double el : list) {
+            if (el > max) {
+                max = el;
+            }
+        }
+        return max;
+    }
+
+    public Double compute(Double a, String op, Double b) {
+        if (op.equals("PLUS")) {
+            return a+b;
+        }
+        else if (op.equals("STAR")) {
+            return a*b;
+        }
+
+        return null;
+    }
+
+:};
+
+
+action code {:
+
+    class Command {
+        private Double value;
+        private Integer power;
+        private String type;
+        private ArrayList<Double> values;
+
+        Command(String type, Integer power, Double value , ArrayList<Double> values) {
+            this.type=type;
+            this.power=power;
+            this.value=value;
+            this.values=values;
+
+        }
+
+
+        public String getType() {
+            return this.type;
+        }
+
+        public Double getValue() {
+            return this.value;
+        }
+
+        public ArrayList<Double> getValues() {
+            return this.values;
+        }
+
+        public Integer getPower() {
+            return this.power;
+        }
+    }
+  
+
+:};
+
+// Terminal tokens
+
+terminal MINUS, KM, UNITS, DO, DONE, FUEL, START, STAR, PLUS, BAT, LIT, KWH, MAX, MOD, USE, TOK1, TOK2, SEP, SC, CM, RO, RC;
+terminal Double DOUBLE;
+
+
+// Non terminal tokens  
+non terminal prog, header, run, tok1, commands, tok1s;
+non terminal Command command, use, mod;
+non terminal Double[] start_;
+non terminal Double battery_ass, fuel_ass, exp, max, operand, cons;
+non terminal ArrayList<Double> exp_list, cons_list;
+
+//////////////////////////////////////
+// Grammar start
+//////////////////////////////////////
+
+// Precedences to resolve conflicts
+precedence left PLUS;
+precedence left STAR;
+
+
+start with prog;
+
+prog ::= header SEP run;
+
+
+
+header ::= tok1 
+    | tok1 TOK2 SC tok1 TOK2 SC tok1 //! mettere prima e dopo il TOKEN fisso, la lista nullable
+    | tok1 TOK2 SC tok1 TOK2 SC tok1 TOK2 SC tok1
+;
+
+tok1 ::=  | tok1s;
+
+tok1s ::= tok1s TOK1 SC | TOK1 SC;
+
+
+run ::= start_ commands ;
+
+commands ::= commands command:c1 command:c2 {:
+    Double[] res = (Double[]) parser.stack(-3); //! ho ricorsione di commands, quindi lo considero sullo stack
+    ArrayList<Command> list = new ArrayList();
+    list.add(c1);
+    list.add(c2);
+    for (Command c : list) {
+        if (c.getType().equals("MOD")) {
+            res[c.getPower()]+=c.getValue();
+            System.out.println("battery="+res[0].toString()+" fuel="+res[1].toString());
+        }
+        else {
+            for (Double val : c.getValues()) {
+                res[c.getPower()]-=val;
+                System.out.println("battery="+res[0].toString()+" fuel="+res[1].toString());
+            }
+
+        }
+        
+    }
+
+:} |  command:c1 command:c2  command:c3 command:c4 {:
+    Double[] res = (Double[]) parser.stack(-4); //! non -5 perchè qui NON ho ricorsione di commands
+    System.out.println("battery="+res[0].toString()+" fuel="+res[1].toString());
+    ArrayList<Command> list = new ArrayList();
+    list.add(c1);
+    list.add(c2);
+    list.add(c3);
+    list.add(c4);
+    for (Command c : list) {
+        if (c.getType().equals("MOD")) {
+            res[c.getPower()]+=c.getValue();
+            System.out.println("battery="+res[0].toString()+" fuel="+res[1].toString());
+        }
+        else {
+            for (Double val : c.getValues()) {
+                res[c.getPower()]-=val;
+                System.out.println("battery="+res[0].toString()+" fuel="+res[1].toString());
+            }
+
+        }
+        
+
+    }
+:} ;
+
+start_ ::= START battery_ass:b MINUS fuel_ass:f SC {:
+    Double[] res = new Double[2];
+    res[0] = b;
+    res[1] = f;
+    RESULT = res;
+:} | START fuel_ass:f MINUS battery_ass:b SC {:
+    Double[] res = new Double[2];
+    res[0] = b;
+    res[1] = f;
+    RESULT = res;
+
+:} | START  MINUS fuel_ass:f SC {:
+    Double[] res = new Double[2];
+    res[0] = 100.0;
+    res[1] = f;
+    RESULT = res;
+
+:} | START battery_ass:b MINUS  SC {:
+    Double[] res = new Double[2];
+    res[0] = b;
+    res[1] = 100.0;
+    RESULT = res;
+
+:}  | START  MINUS battery_ass:b SC {:
+    Double[] res = new Double[2];
+    res[0] = b;
+    res[1] = 100.0;
+    RESULT = res;
+
+:} | START fuel_ass:f MINUS  SC {:
+    Double[] res = new Double[2];
+    res[0] = 100.0;
+    res[1] = f;
+    RESULT = res;
+
+:} | START  MINUS  SC {:
+    Double[] res = new Double[2];
+    res[0] = 100.0;
+    res[1] = 100.0;
+    RESULT = res;
+
+:} ;
+
+battery_ass ::= BAT exp:e KWH {:
+    Double res = e;
+    RESULT = res;
+:};
+
+fuel_ass ::= FUEL exp:e LIT {:
+    Double res = e;
+    RESULT = res;
+:};
+
+exp ::=   exp:left PLUS exp:right {:
+    RESULT = parser.compute(left, "PLUS", right);
+:}| exp:left STAR exp:right {:
+    RESULT = parser.compute(left, "STAR", right);
+:} | operand:o {:
+    RESULT = o;
+:};
+
+operand ::= max:m {:
+    RESULT =m;
+:} | DOUBLE:d {:
+    RESULT=d;
+:};
+
+max ::= MAX RO exp_list:list RC {:
+    Double res = parser.getMax(list);
+    RESULT = res;
+:};
+
+exp_list ::= exp_list:list CM exp:e {:
+    list.add(e);
+    RESULT = list;
+:}| exp:e {:
+    ArrayList<Double> list = new ArrayList();
+    list.add(e);
+    RESULT = list;
+:};
+
+command ::= mod:c SC {:
+    RESULT = c;
+:}| use:c SC {:
+    RESULT = c;
+:};
+
+
+mod ::= MOD BAT exp:e {:
+    Command res = new Command("MOD", 0, e, null);
+    RESULT = res;
+:} | MOD FUEL exp:e {:
+    Command res = new Command("MOD", 1, e, null);
+    RESULT = res;
+:}; 
+
+use ::= USE BAT DO cons_list:list DONE {:
+    Command res = new Command("USE", 0, null, list);
+    RESULT = res;
+:}| USE FUEL DO cons_list:list DONE {:
+    Command res = new Command("USE", 1, null, list);
+    RESULT = res;
+:}; 
+
+cons_list ::= cons_list:list cons:c {:
+    list.add(c);
+    RESULT = list;
+:} | cons:c {:
+    ArrayList<Double> list = new ArrayList();
+    list.add(c);
+    RESULT = list;
+:};
+
+cons ::= exp:e1 KM exp:e2 UNITS SC {:
+    RESULT = e1*e2;
+:};
+
